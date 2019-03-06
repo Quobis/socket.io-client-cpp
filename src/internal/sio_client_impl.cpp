@@ -200,18 +200,11 @@ namespace sio
         do{
             websocketpp::uri uo(uri);
             ostringstream ss;
-#if SIO_TLS
-            ss<<"wss://";
-#else
-            ss<<"ws://";
-#endif
-            if (m_sid.size()==0) {
-                ss<<uo.get_host()<<":"<<uo.get_port()<<"/socket.io/?EIO=4&transport=websocket&t="<<time(NULL)<<queryString;
+            ss << uo.str() << "socket.io/?EIO=4&transport=websocket";
+            if (m_sid.size()) {
+              ss << "&sid=" << m_sid;
             }
-            else
-            {
-                ss<<uo.get_host()<<":"<<uo.get_port()<<"/socket.io/?EIO=4&transport=websocket&sid="<<m_sid<<"&t="<<time(NULL)<<queryString;
-            }
+            ss << "&t=" << time(NULL) << queryString;
             lib::error_code ec;
             client_type::connection_ptr con = m_client.get_connection(ss.str(), ec);
             if (ec) {
