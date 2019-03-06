@@ -41,6 +41,7 @@ namespace sio
 #endif
         // Initialize the Asio transport policy
         m_client.init_asio();
+        m_client.set_close_handshake_timeout(1500);
 
         // Bind the clients we are using
         using websocketpp::lib::placeholders::_1;
