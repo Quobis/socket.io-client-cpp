@@ -199,12 +199,25 @@ namespace sio
                                   "run loop end");
     }
 
+    static bool ends_with(const std::string& base, const std::string& ending) {
+        bool has_ending{false};
+        if (ending.size() <= base.size()) {
+          has_ending = (base.compare(base.length() - ending.length(),
+                                     ending.length(), ending) == 0);
+        }
+        return has_ending;
+    }
+
     void client_impl::connect_impl(const string& uri, const string& queryString)
     {
         do{
             websocketpp::uri uo(uri);
             ostringstream ss;
-            ss << uo.str() << "socket.io/?EIO=4&transport=websocket";
+            ss << uo.str();
+            if (!ends_with(uo.str(), "socket.io")) {
+                ss << "socket.io";
+            }
+            ss << "/?EIO=4&transport=websocket";
             if (m_sid.size()) {
               ss << "&sid=" << m_sid;
             }
