@@ -214,6 +214,9 @@ namespace sio
             websocketpp::uri uo(uri);
             ostringstream ss;
             ss << uo.str();
+            if (!ends_with(uo.str(), "/")) {
+              ss << "/";
+            }
             if (!ends_with(uo.str(), "socket.io")) {
                 ss << "socket.io";
             }
