@@ -7,7 +7,6 @@
 //
 
 #include "sio_client_impl.h"
-#include "sio_timer.h"
 #include <sstream>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <mutex>
@@ -148,8 +147,6 @@ namespace sio
         m_con_state = con_closing;
         this->sockets_invoke_void(&sio::socket::close);
         m_client.get_io_service().dispatch(lib::bind(&client_impl::close_impl, this,close::status::normal,"End by user"));
-        quobis::timer force_end_timer([this]() { m_client.stop(); },
-                                      std::chrono::milliseconds(m_reconn_delay));
         if(m_network_thread)
         {
             m_network_thread->join();
