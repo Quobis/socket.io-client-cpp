@@ -573,13 +573,17 @@ failed:
 #if SIO_TLS
     client_impl::context_ptr client_impl::on_tls_init(connection_hdl conn)
     {
-        context_ptr ctx = context_ptr(new  boost::asio::ssl::context(boost::asio::ssl::context::tlsv13));
+        using context = boost::asio::ssl::context;
+        context_ptr ctx = context_ptr(new context(context::tlsv13));
+        if (SSL_CTX_set_min_proto_version(ctx->native_handle(),
+                                          TLS1_2_VERSION) != 1)
+        {
+          cerr<<"Init tls failed, reason: cannot set minimum version"<<endl;
+        }
         boost::system::error_code ec;
-        ctx->set_options(boost::asio::ssl::context::default_workarounds |
-                             boost::asio::ssl::context::no_sslv2 |
-                             boost::asio::ssl::context::no_sslv3 |
-                             boost::asio::ssl::context::no_tlsv1 |
-                             boost::asio::ssl::context::single_dh_use,ec);
+        ctx->set_options(context::default_workarounds |
+                             boost::asio::ssl::context::single_dh_use,
+                         ec);
         if(ec)
         {
             cerr<<"Init tls failed,reason:"<< ec.message()<<endl;
