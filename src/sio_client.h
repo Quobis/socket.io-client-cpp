@@ -10,6 +10,7 @@
 #include <functional>
 #include "sio_message.h"
 #include "sio_socket.h"
+#include <boost/asio/io_service.hpp>
 
 namespace sio
 {
@@ -32,6 +33,7 @@ namespace sio
         typedef std::function<void(std::string const& nsp)> socket_listener;
         
         client();
+        client(boost::asio::io_service* io_service);
         ~client();
         
         //set listeners and event bindings.

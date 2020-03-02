@@ -17,7 +17,12 @@ namespace sio
         m_impl(new client_impl())
     {
     }
-    
+
+    client::client(boost::asio::io_service* io_service):
+        m_impl(new client_impl(io_service))
+    {
+    }
+
     client::~client()
     {
         delete m_impl;

@@ -24,7 +24,10 @@ using namespace std;
 namespace sio
 {
     /*************************public:*************************/
-    client_impl::client_impl() :
+    client_impl::client_impl(): client_impl(nullptr) {};
+
+    client_impl::client_impl(boost::asio::io_service* io_service) :
+        io_service(io_service),
         m_con_state(con_closed),
         m_ping_interval(0),
         m_ping_timeout(0),
@@ -40,7 +43,11 @@ namespace sio
         m_client.set_access_channels(alevel::connect|alevel::disconnect|alevel::app);
 #endif
         // Initialize the Asio transport policy
-        m_client.init_asio();
+        if (io_service == nullptr) {
+          m_client.init_asio();
+        } else {
+          m_client.init_asio(io_service);
+        }
 
         // Bind the clients we are using
         using websocketpp::lib::placeholders::_1;
@@ -101,7 +108,9 @@ namespace sio
 
         this->reset_states();
         m_client.get_io_service().dispatch(lib::bind(&client_impl::connect_impl,this,uri,m_query_string));
-        m_network_thread.reset(new thread(lib::bind(&client_impl::run_loop,this)));//uri lifecycle?
+        if (io_service == nullptr) {
+          m_network_thread.reset(new thread(lib::bind(&client_impl::run_loop,this)));//uri lifecycle?
+        }
 
     }
 

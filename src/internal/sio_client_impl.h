@@ -56,6 +56,7 @@ namespace sio
         };
         
         client_impl();
+        client_impl(boost::asio::io_service* io_service);
         
         ~client_impl();
         
@@ -175,6 +176,8 @@ namespace sio
         context_ptr on_tls_init(connection_hdl con);
         #endif
         
+        boost::asio::io_service* io_service;
+
         // Connection pointer for client functions.
         connection_hdl m_con;
         client_type m_client;
@@ -218,7 +221,7 @@ namespace sio
         unsigned m_reconn_attempts;
 
         unsigned m_reconn_made;
-        
+
         friend class sio::client;
         friend class sio::socket;
     };
