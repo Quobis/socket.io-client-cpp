@@ -50,6 +50,10 @@ namespace sio
         void set_socket_open_listener(socket_listener const& l);
         
         void set_socket_close_listener(socket_listener const& l);
+
+        void set_connect_timeout(unsigned timeout);
+
+        void set_close_timeout(unsigned timeout);
         
         void clear_con_listeners();
         

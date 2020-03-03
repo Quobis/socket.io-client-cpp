@@ -156,6 +156,14 @@ namespace sio
         m_con_state = con_closing;
         this->sockets_invoke_void(&sio::socket::close);
         m_client.get_io_service().dispatch(lib::bind(&client_impl::close_impl, this,close::status::normal,"End by user"));
+
+        {
+          std::unique_lock<std::mutex> lock{m_closed_mutex};
+          while (m_is_closed == false) {
+            m_close_cv.wait(lock);
+          }
+        }
+
         if(m_network_thread)
         {
             m_network_thread->join();
@@ -192,6 +200,21 @@ namespace sio
     void client_impl::on_socket_opened(string const& nsp)
     {
         if(m_socket_open_listener)m_socket_open_listener(nsp);
+    }
+
+    void client_impl::set_connect_timeout(unsigned ms_timeout) {
+      m_client.set_open_handshake_timeout(ms_timeout);
+    }
+
+    void client_impl::set_close_timeout(unsigned ms_timeout) {
+      m_client.set_close_handshake_timeout(ms_timeout);
+      if (!m_con.expired()) {
+        lib::error_code ec;
+        auto con = m_client.get_con_from_hdl(m_con, ec);
+        if (ec.value() == 0) {
+          con->set_close_handshake_timeout(ms_timeout);
+        }
+      }
     }
 
     /*************************private:*************************/
@@ -244,8 +267,14 @@ namespace sio
         while(0);
         if(m_fail_listener)
         {
-            m_fail_listener();
+            m_client.get_io_service().post(m_fail_listener);
         }
+
+        {
+          std::unique_lock<std::mutex> lock{m_closed_mutex};
+          m_is_closed = true;
+        }
+        m_close_cv.notify_one();
     }
 
     void client_impl::close_impl(close::status::value const& code,string const& reason)
@@ -395,7 +424,14 @@ namespace sio
         }
         else
         {
-            if(m_fail_listener)m_fail_listener();
+            if (m_fail_listener) {
+              m_client.get_io_service().post(m_fail_listener);
+            }
+            {
+              std::unique_lock<std::mutex> lock{m_closed_mutex};
+              m_is_closed = true;
+            }
+            m_close_cv.notify_one();
         }
     }
     
@@ -452,8 +488,14 @@ namespace sio
         
         if(m_close_listener)
         {
-            m_close_listener(reason);
+            m_client.get_io_service().post(lib::bind(m_close_listener,reason));
         }
+
+        {
+          std::unique_lock<std::mutex> lock{m_closed_mutex};
+          m_is_closed = true;
+        }
+        m_close_cv.notify_one();
     }
     
     void client_impl::on_message(connection_hdl con, client_type::message_ptr msg)

@@ -32,6 +32,7 @@ typedef websocketpp::config::asio_client client_config;
 #endif //DEBUG
 #include <boost/asio/deadline_timer.hpp>
 
+#include <condition_variable>
 #include <memory>
 #include <map>
 #include <thread>
@@ -113,9 +114,14 @@ namespace sio
 
         void set_reconnect_attempts(unsigned attempts) {m_reconn_attempts = attempts;}
 
+        void set_connect_timeout(unsigned ms_timeout);
+
+        void set_close_timeout(unsigned ms_timeout);
+
         void set_reconnect_delay(unsigned millis) {m_reconn_delay = millis;if(m_reconn_delay_max<millis) m_reconn_delay_max = millis;}
 
         void set_reconnect_delay_max(unsigned millis) {m_reconn_delay_max = millis;if(m_reconn_delay>millis) m_reconn_delay = millis;}
+
         
     protected:
         void send(packet& p);
@@ -177,6 +183,10 @@ namespace sio
         #endif
         
         boost::asio::io_service* io_service;
+
+        bool m_is_closed{false};
+        std::mutex m_closed_mutex;
+        std::condition_variable m_close_cv;
 
         // Connection pointer for client functions.
         connection_hdl m_con;

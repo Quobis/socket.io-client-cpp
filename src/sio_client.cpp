@@ -79,6 +79,14 @@ namespace sio
         m_impl->connect(uri, query);
     }
 
+    void client::set_connect_timeout(unsigned ms_timeout) {
+        m_impl->set_connect_timeout(ms_timeout);
+    }
+
+    void client::set_close_timeout(unsigned ms_timeout) {
+        m_impl->set_close_timeout(ms_timeout);
+    }
+
     void client::connect(const std::string& uri, const std::map<string,string>& query)
     {
         m_impl->connect(uri, query);
